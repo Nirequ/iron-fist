@@ -1,7 +1,7 @@
--- Spawns a small visual burst (yellow ball + floating "+N" text) at
--- the punching bag whenever the server reports a punch. Cheap MVP —
--- can later be replaced with ParticleEmitter assets and a SFX
--- library to get the OPM / DBZ feel.
+-- Spawns a small visual burst (neon-lime ball + floating "+N" text)
+-- at the punching bag whenever the server reports a punch. Cheap MVP
+-- — can later be replaced with ParticleEmitter assets and a SFX
+-- library to get a juicier anime feel.
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -9,10 +9,12 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local RemoteObjects = require(Shared:WaitForChild("RemoteObjects"))
+local Config = require(Shared:WaitForChild("Config"))
+
+local THEME = Config.THEME
 
 local PunchEffects = {}
 
-local BURST_COLOR = Color3.fromRGB(255, 220, 80)
 local BURST_LIFETIME = 0.6
 
 local function flashAt(position, damage)
@@ -23,7 +25,7 @@ local function flashAt(position, damage)
 	burst.CanTouch = false
 	burst.CanQuery = false
 	burst.Material = Enum.Material.Neon
-	burst.Color = BURST_COLOR
+	burst.Color = THEME.Accent
 	burst.Shape = Enum.PartType.Ball
 	burst.Size = Vector3.new(0.4, 0.4, 0.4)
 	burst.Position = position
@@ -39,8 +41,8 @@ local function flashAt(position, damage)
 	text.Size = UDim2.new(1, 0, 1, 0)
 	text.BackgroundTransparency = 1
 	text.Text = "+" .. tostring(math.floor(damage + 0.5))
-	text.TextColor3 = BURST_COLOR
-	text.TextStrokeColor3 = Color3.fromRGB(40, 20, 0)
+	text.TextColor3 = THEME.TextOnPrimary
+	text.TextStrokeColor3 = THEME.PrimaryDark
 	text.TextStrokeTransparency = 0
 	text.TextScaled = true
 	text.Font = Enum.Font.GothamBlack
