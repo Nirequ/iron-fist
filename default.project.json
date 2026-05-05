@@ -32,10 +32,11 @@
         "$properties": {
           "Anchored": true,
           "Color": [
-            0.18,
-            0.18,
-            0.22
+            0.909,
+            0.988,
+            0.909
           ],
+          "Material": "SmoothPlastic",
           "Locked": true,
           "Position": [
             0,
@@ -48,16 +49,48 @@
             512
           ]
         }
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "Color": [
+            0.494,
+            0.851,
+            0.341
+          ],
+          "Material": "SmoothPlastic",
+          "Locked": true,
+          "Position": [
+            0,
+            0.5,
+            0
+          ],
+          "Size": [
+            8,
+            1,
+            8
+          ],
+          "TopSurface": "Smooth",
+          "BottomSurface": "Smooth",
+          "Neutral": true,
+          "Enabled": true
+        }
       }
     },
     "Lighting": {
       "$properties": {
         "Ambient": [
-          0,
-          0,
-          0
+          0.7,
+          0.75,
+          0.7
         ],
-        "Brightness": 2,
+        "OutdoorAmbient": [
+          0.78,
+          0.83,
+          0.78
+        ],
+        "Brightness": 3,
         "GlobalShadows": true,
         "Outlines": false,
         "Technology": "Voxel"

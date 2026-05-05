@@ -1,7 +1,6 @@
--- Minimal Strength counter + shop HUD. Built procedurally in Lua
--- for the MVP only — once the visual style is locked in, replace
--- this with a hand-built ScreenGui in StarterGui and have it call
--- the same RemoteObjects.
+-- Strength counter + shop HUD. Built procedurally for the MVP — once
+-- the visual style is locked in, replace this with a hand-built
+-- ScreenGui in StarterGui that calls the same RemoteObjects.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -9,6 +8,8 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local RemoteObjects = require(Shared:WaitForChild("RemoteObjects"))
 local Config = require(Shared:WaitForChild("Config"))
+
+local THEME = Config.THEME
 
 local HUD = {}
 
@@ -18,59 +19,89 @@ local playerGui = player:WaitForChild("PlayerGui")
 local strengthLabel
 local upgradeButtons = {}    -- upgradeId → TextButton
 
-local GOLD = Color3.fromRGB(255, 215, 100)
-local DARK = Color3.fromRGB(15, 15, 18)
-local PANEL = Color3.fromRGB(35, 30, 25)
-
-local function makeStrengthLabel(parent)
-	local label = Instance.new("TextLabel")
-	label.Name = "StrengthLabel"
-	label.AnchorPoint = Vector2.new(0, 0)
-	label.Position = UDim2.new(0, 16, 0, 16)
-	label.Size = UDim2.new(0, 280, 0, 60)
-	label.BackgroundColor3 = DARK
-	label.BackgroundTransparency = 0.2
-	label.BorderSizePixel = 0
-	label.Text = "STRENGTH: 0"
-	label.TextColor3 = GOLD
-	label.TextSize = 22
-	label.Font = Enum.Font.GothamBlack
-	label.Parent = parent
+local function makeStrengthCard(parent)
+	local card = Instance.new("Frame")
+	card.Name = "StrengthCard"
+	card.AnchorPoint = Vector2.new(0, 0)
+	card.Position = UDim2.new(0, 16, 0, 16)
+	card.Size = UDim2.new(0, 280, 0, 72)
+	card.BackgroundColor3 = THEME.Card
+	card.BorderSizePixel = 0
+	card.Parent = parent
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
-	corner.Parent = label
+	corner.CornerRadius = UDim.new(0, 12)
+	corner.Parent = card
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = GOLD
+	stroke.Color = THEME.CardBorder
 	stroke.Thickness = 2
-	stroke.Parent = label
+	stroke.Parent = card
 
-	return label
+	local title = Instance.new("TextLabel")
+	title.Name = "Title"
+	title.Size = UDim2.new(1, -16, 0, 18)
+	title.Position = UDim2.new(0, 8, 0, 6)
+	title.BackgroundTransparency = 1
+	title.Text = "STRENGTH"
+	title.TextColor3 = THEME.TextSecondary
+	title.TextSize = 13
+	title.Font = Enum.Font.GothamBold
+	title.TextXAlignment = Enum.TextXAlignment.Left
+	title.Parent = card
+
+	local value = Instance.new("TextLabel")
+	value.Name = "Value"
+	value.Size = UDim2.new(1, -16, 0, 36)
+	value.Position = UDim2.new(0, 8, 0, 26)
+	value.BackgroundTransparency = 1
+	value.Text = "0"
+	value.TextColor3 = THEME.Energy
+	value.TextSize = 32
+	value.Font = Enum.Font.GothamBlack
+	value.TextXAlignment = Enum.TextXAlignment.Left
+	value.Parent = card
+
+	return value
 end
 
 local function makeShopButton(parent, upgradeId, layoutOrder)
 	local button = Instance.new("TextButton")
 	button.Name = upgradeId .. "Button"
-	button.Size = UDim2.new(0, 240, 0, 64)
+	button.Size = UDim2.new(0, 240, 0, 72)
 	button.LayoutOrder = layoutOrder
-	button.BackgroundColor3 = PANEL
+	button.BackgroundColor3 = THEME.Primary
 	button.BorderSizePixel = 0
-	button.AutoButtonColor = true
+	button.AutoButtonColor = false
 	button.Text = ""
-	button.TextColor3 = GOLD
+	button.TextColor3 = THEME.TextOnPrimary
 	button.TextSize = 16
-	button.Font = Enum.Font.GothamBold
+	button.Font = Enum.Font.GothamBlack
 	button.Parent = parent
 
 	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0, 8)
+	corner.CornerRadius = UDim.new(0, 12)
 	corner.Parent = button
 
 	local stroke = Instance.new("UIStroke")
-	stroke.Color = GOLD
+	stroke.Color = THEME.PrimaryDark
 	stroke.Thickness = 2
 	stroke.Parent = button
+
+	-- Manual hover / press feedback so we can use palette colors
+	-- instead of Roblox's auto-darkening (which goes to dirty grey).
+	button.MouseEnter:Connect(function()
+		button.BackgroundColor3 = THEME.PrimaryHover
+	end)
+	button.MouseLeave:Connect(function()
+		button.BackgroundColor3 = THEME.Primary
+	end)
+	button.MouseButton1Down:Connect(function()
+		button.BackgroundColor3 = THEME.PrimaryPressed
+	end)
+	button.MouseButton1Up:Connect(function()
+		button.BackgroundColor3 = THEME.PrimaryHover
+	end)
 
 	button.MouseButton1Click:Connect(function()
 		local result = RemoteObjects.BuyUpgradeFunction:InvokeServer(upgradeId)
@@ -105,7 +136,7 @@ end
 local function refreshFromStats(stats)
 	if not stats then return end
 	if strengthLabel then
-		strengthLabel.Text = "STRENGTH: " .. tostring(math.floor(stats.Strength + 0.5))
+		strengthLabel.Text = tostring(math.floor(stats.Strength + 0.5))
 	end
 	for upgradeId, button in pairs(upgradeButtons) do
 		local cfg = Config.UPGRADES[upgradeId]
@@ -129,12 +160,11 @@ function HUD.Init()
 	screenGui.IgnoreGuiInset = true
 	screenGui.Parent = playerGui
 
-	strengthLabel = makeStrengthLabel(screenGui)
+	strengthLabel = makeStrengthCard(screenGui)
 	buildShop(screenGui)
 
-	-- The server fires StatsUpdated right after PlayerAdded, but we
-	-- also pull once on startup so we don't show "0" if the client
-	-- script ran before the server got around to firing.
+	-- Pull once on startup; the server also fires StatsUpdated right
+	-- after PlayerAdded so we should never get stuck on the placeholder.
 	local stats = RemoteObjects.GetStatsFunction:InvokeServer()
 	refreshFromStats(stats)
 
