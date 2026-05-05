@@ -63,6 +63,27 @@ Config.CURRENCY_NAME = "Strength"
 -- macro spam, not to gate the player's natural click rate.
 Config.BASE_PUNCH_COOLDOWN = 0.05
 
+-- Asset id of the animation played on the player's character on
+-- every successful click. The default is the Roblox-owned R15
+-- ToolSlash from the default character animation bundle — it's a
+-- swing motion (not literally a punch) but it's guaranteed to load
+-- because Roblox Inc. owns the asset and publishes it for any place
+-- to use. Random user-uploaded "punch" animations from the catalog
+-- usually fail to load in third-party places because the uploader
+-- left them private (you only get the asset metadata, not a
+-- playable animation).
+--
+-- To use a real punch:
+--   1. Upload a punch animation to the Roblox catalog under your
+--      account.
+--   2. Set its sharing to "Public".
+--   3. Replace the number below with your asset id.
+--   4. Reload Studio — that's the only place the id is referenced.
+--
+-- Set to nil/empty to disable the animation entirely (gameplay works
+-- fine without it; only the visual is lost).
+Config.PUNCH_ANIMATION_ID = "rbxassetid://522635514"
+
 -- Strength gained per punch before any upgrade multipliers, at
 -- level 1 of PunchPower.
 Config.BASE_PUNCH_DAMAGE = 1
@@ -83,10 +104,89 @@ Config.UPGRADES = {
 		Description = "Punch a little faster.",
 		BaseCost = 50,
 		CostMultiplier = 2.0,
-		EffectPerLevel = 0.05,   -- −0.05 s cooldown per level
-		MaxLevel = 8,            -- floor at 0.6 - 0.05*8 = 0.20 s
+		EffectPerLevel = 0.005,  -- −0.005 s cooldown per level
+		MaxLevel = 8,
 	},
 }
+
+-- Glove definitions. The Wooden glove is the default starter — every
+-- player owns it, you can't unequip into "nothing". Order matters
+-- only for UI sort; ids are stored verbatim in DataStore so don't
+-- rename them once shipped.
+Config.GLOVES_LIST = {
+	{
+		Id            = "Wooden",
+		DisplayName   = "Wooden Gloves",
+		Description   = "Bare-bones starter gloves.",
+		Multiplier    = 1,
+		Cost          = 0,
+		Rarity        = "Common",
+	},
+	{
+		Id            = "Iron",
+		DisplayName   = "Iron Gloves",
+		Description   = "Heavy iron knuckles. 2× clicks.",
+		Multiplier    = 2,
+		Cost          = 50,
+		Rarity        = "Uncommon",
+	},
+	{
+		Id            = "Steel",
+		DisplayName   = "Steel Gloves",
+		Description   = "Polished steel. 4× clicks.",
+		Multiplier    = 4,
+		Cost          = 500,
+		Rarity        = "Rare",
+	},
+	{
+		Id            = "Mythril",
+		DisplayName   = "Mythril Gloves",
+		Description   = "Light, sharp, magical. 9× clicks.",
+		Multiplier    = 9,
+		Cost          = 5000,
+		Rarity        = "Epic",
+	},
+	{
+		Id            = "Diamond",
+		DisplayName   = "Diamond Gloves",
+		Description   = "Crystalline edge. 19× clicks.",
+		Multiplier    = 19,
+		Cost          = 50000,
+		Rarity        = "Legendary",
+	},
+	{
+		Id            = "Dragon",
+		DisplayName   = "Dragon Gloves",
+		Description   = "Forged in dragonfire. 69× clicks.",
+		Multiplier    = 69,
+		Cost          = 500000,
+		Rarity        = "Mythic",
+	},
+}
+
+-- Built once at module load so we don't linear-scan on every lookup.
+Config.GLOVES_BY_ID = {}
+for _, glove in ipairs(Config.GLOVES_LIST) do
+	Config.GLOVES_BY_ID[glove.Id] = glove
+end
+
+-- Maps a rarity label (Common / Uncommon / …) to the rarity colour
+-- already declared in THEME. Falls back to Common grey on unknown
+-- input.
+function Config.GetRarityColor(rarity)
+	local key = "Rarity" .. tostring(rarity)
+	return Config.THEME[key] or Config.THEME.RarityCommon
+end
+
+function Config.GetGlove(id)
+	return Config.GLOVES_BY_ID[id]
+end
+
+function Config.GetGloveMultiplier(id)
+	local g = Config.GLOVES_BY_ID[id]
+	if not g then return 1 end
+	return g.Multiplier
+end
 
 -- Cost to upgrade from `currentLevel` to `currentLevel + 1`. Returns
 -- math.huge if the upgrade is already at its cap.
@@ -98,18 +198,20 @@ function Config.GetUpgradeCost(upgradeId, currentLevel)
 end
 
 -- Strength gained per punch for a player at the given PunchPower
--- level. Level 1 = base damage, no upgrades applied.
-function Config.ComputePunchDamage(level)
-	return Config.BASE_PUNCH_DAMAGE
-		+ Config.UPGRADES.PunchPower.EffectPerLevel * (level - 1)
+-- level, multiplied by the equipped glove's multiplier.
+function Config.ComputePunchDamage(power, gloveMultiplier)
+	gloveMultiplier = gloveMultiplier or 1
+	local base = Config.BASE_PUNCH_DAMAGE
+		+ Config.UPGRADES.PunchPower.EffectPerLevel * (power - 1)
+	return base * gloveMultiplier
 end
 
 -- Cooldown (in seconds) between consecutive punches for a player at
--- the given PunchSpeed level. Floors at 0.1 s so we can't hit zero.
+-- the given PunchSpeed level. Floors at 0.015 s so we can't hit zero.
 function Config.ComputePunchCooldown(level)
 	local raw = Config.BASE_PUNCH_COOLDOWN
 		- Config.UPGRADES.PunchSpeed.EffectPerLevel * (level - 1)
-	return math.max(0.1, raw)
+	return math.max(0.015, raw)
 end
 
 return Config

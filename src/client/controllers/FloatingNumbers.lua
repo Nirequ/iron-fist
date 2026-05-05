@@ -24,7 +24,9 @@ local cachedStats     -- last value seen on StatsUpdated
 
 local function currentDamage()
 	local power = (cachedStats and cachedStats.Upgrades and cachedStats.Upgrades.PunchPower) or 1
-	return Config.ComputePunchDamage(power)
+	local equippedGlove = (cachedStats and cachedStats.Gloves and cachedStats.Gloves.Equipped) or "Wooden"
+	local mult = Config.GetGloveMultiplier(equippedGlove)
+	return Config.ComputePunchDamage(power, mult)
 end
 
 local function spawnLabel(parent, screenPos, damage)

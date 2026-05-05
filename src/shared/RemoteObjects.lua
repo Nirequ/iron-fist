@@ -12,6 +12,8 @@ local isServer = RunService:IsServer()
 local FUNCTIONS = {
 	"GetStatsFunction",       -- player → server: current stats
 	"BuyUpgradeFunction",     -- player → server: { upgradeId } → result
+	"BuyGloveFunction",       -- player → server: { gloveId }   → result
+	"EquipGloveFunction",     -- player → server: { gloveId }   → result
 }
 
 local EVENTS = {
