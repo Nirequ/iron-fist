@@ -70,7 +70,7 @@ Config.BASE_PUNCH_COOLDOWN = 0.05
 --
 -- Set to nil/empty to disable the animation entirely (gameplay
 -- works fine without it; only the visual is lost).
-Config.PUNCH_ANIMATION_ID = "rbxassetid://3910055905"
+Config.PUNCH_ANIMATION_ID = "rbxassetid://76710893141393"
 
 -- Strength gained per punch before any upgrade multipliers, at
 -- level 1 of PunchPower.
