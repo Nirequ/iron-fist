@@ -164,6 +164,14 @@ function PlayerStatsService.Init()
 		return PlayerStatsService.BuyUpgrade(player, upgradeId)
 	end
 
+	-- The client fires this whenever the player clicks/taps anywhere
+	-- in the world (not over a UI element). The server is still the
+	-- authority on how much Strength is gained — cooldown lives in
+	-- RegisterPunch.
+	RemoteObjects.ClickFired.OnServerEvent:Connect(function(player)
+		PlayerStatsService.RegisterPunch(player)
+	end)
+
 	task.spawn(autosaveLoop)
 	print("PlayerStatsService initialized")
 end

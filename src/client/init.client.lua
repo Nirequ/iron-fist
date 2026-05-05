@@ -1,9 +1,4 @@
 -- Iron Fist client entry point.
---
--- Loads the minimal Lua HUD + the punch-burst effect handler. Both
--- of these are MVP placeholders — the HUD especially is meant to be
--- replaced with a hand-built ScreenGui in StarterGui once the visual
--- style is locked in.
 
 print("=== Iron Fist client starting ===")
 
@@ -11,7 +6,14 @@ local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 player:WaitForChild("PlayerGui")
 
-require(script.controllers.HUD).Init()
-require(script.controllers.PunchEffects).Init()
+local ClickHandler = require(script.controllers.ClickHandler)
+local FloatingNumbers = require(script.controllers.FloatingNumbers)
+local HUD = require(script.controllers.HUD)
+local PunchEffects = require(script.controllers.PunchEffects)
+
+ClickHandler.Init()
+FloatingNumbers.Init(ClickHandler)
+HUD.Init()
+PunchEffects.Init()
 
 print("=== Iron Fist client ready ===")

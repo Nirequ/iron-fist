@@ -17,6 +17,7 @@ local FUNCTIONS = {
 local EVENTS = {
 	"StatsUpdated",           -- server → player: full stats refresh
 	"PunchEffect",            -- server → all: { player, damage } burst
+	"ClickFired",             -- player → server: anywhere-on-screen click
 }
 
 local remotesFolder = ReplicatedStorage:FindFirstChild("Remotes")

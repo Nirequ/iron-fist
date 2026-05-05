@@ -58,8 +58,10 @@ Config.THEME = {
 Config.CURRENCY_NAME = "Strength"
 
 -- How often a player can land a punch at level 1 of PunchSpeed,
--- expressed in seconds.
-Config.BASE_PUNCH_COOLDOWN = 0.6
+-- expressed in seconds. Set very low because the new mechanic is
+-- "click anywhere on screen" — the cooldown only exists to stop
+-- macro spam, not to gate the player's natural click rate.
+Config.BASE_PUNCH_COOLDOWN = 0.05
 
 -- Strength gained per punch before any upgrade multipliers, at
 -- level 1 of PunchPower.

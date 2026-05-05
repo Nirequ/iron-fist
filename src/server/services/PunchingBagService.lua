@@ -1,13 +1,12 @@
--- Spawns a punching bag in the workspace and routes its
--- ClickDetector / Touched events into PlayerStatsService.RegisterPunch.
+-- Spawns a punching bag in the workspace as a visual focus point.
+-- The new "click anywhere" mechanic means the bag itself no longer
+-- handles click input; it's just a target / future AFK-zone anchor.
 
-local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
-local PlayerStatsService = require(script.Parent.PlayerStatsService)
 
 local THEME = Config.THEME
 
@@ -63,24 +62,6 @@ local function makeBag(position)
 	chain.Material = Enum.Material.Metal
 	chain.Color = THEME.CardBorder
 	chain.Parent = bag
-
-	-- Click to punch (PC + mobile).
-	local click = Instance.new("ClickDetector")
-	click.MaxActivationDistance = 16
-	click.Parent = bag
-
-	click.MouseClick:Connect(function(player)
-		PlayerStatsService.RegisterPunch(player)
-	end)
-
-	-- Touch to punch — running into the bag also counts.
-	bag.Touched:Connect(function(hit)
-		local character = hit:FindFirstAncestorOfClass("Model")
-		if not character then return end
-		local player = Players:GetPlayerFromCharacter(character)
-		if not player then return end
-		PlayerStatsService.RegisterPunch(player)
-	end)
 
 	bag.Parent = Workspace
 	return bag
