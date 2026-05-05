@@ -87,8 +87,10 @@ local function makeBag(position)
 end
 
 function PunchingBagService.Init()
-	makeBag(Vector3.new(0, 0, 0))
-	print("PunchingBagService initialized — placed PunchingBag at origin")
+	-- Place the bag a few studs away from the SpawnLocation so the
+	-- player can actually walk to it instead of spawning inside it.
+	makeBag(Vector3.new(12, 0, 0))
+	print("PunchingBagService initialized — placed PunchingBag at (12, 0, 0)")
 end
 
 return PunchingBagService

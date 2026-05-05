@@ -18,6 +18,33 @@ local lastSaveAt = {}       -- userId → os.clock() of last save
 
 local AUTOSAVE_INTERVAL = 60   -- seconds
 
+-- A public Roblox punch animation. If you want a different feel,
+-- swap the asset id; the play / load logic stays the same.
+local PUNCH_ANIMATION_ID = "rbxassetid://92159718"
+
+-- One Animation instance is fine for every player — Animator:LoadAnimation
+-- returns a fresh AnimationTrack per call.
+local punchAnimation = Instance.new("Animation")
+punchAnimation.AnimationId = PUNCH_ANIMATION_ID
+
+local function playPunchAnimation(player)
+	local character = player.Character
+	if not character then return end
+	local humanoid = character:FindFirstChildWhichIsA("Humanoid")
+	if not humanoid then return end
+	local animator = humanoid:FindFirstChildOfClass("Animator")
+	if not animator then return end
+
+	local ok, track = pcall(function()
+		return animator:LoadAnimation(punchAnimation)
+	end)
+	if not ok or not track then return end
+
+	track.Priority = Enum.AnimationPriority.Action
+	-- fade-in, weight, speed; speed > 1 makes it feel snappier
+	track:Play(0.1, 1, 1.5)
+end
+
 local function pushStatsToClient(player)
 	local stats = statsByUserId[player.UserId]
 	if not stats then return end
@@ -44,6 +71,9 @@ function PlayerStatsService.RegisterPunch(player)
 	-- Tell every client to play a burst at the bag, so witnesses can
 	-- see when other players hit hard.
 	RemoteObjects.PunchEffect:FireAllClients(player, damage)
+	-- Play the punch animation on the player's rig — Animator state
+	-- replicates automatically, so every client sees the swing.
+	playPunchAnimation(player)
 end
 
 function PlayerStatsService.GetStats(player)
