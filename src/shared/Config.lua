@@ -63,6 +63,15 @@ Config.CURRENCY_NAME = "Strength"
 -- macro spam, not to gate the player's natural click rate.
 Config.BASE_PUNCH_COOLDOWN = 0.05
 
+-- Asset id of the punch animation played on the player's character
+-- on every successful click. Public catalog item; if you upload your
+-- own animation, replace the number here and reload — that's the
+-- only place the id is referenced.
+--
+-- Set to nil/empty to disable the animation entirely (gameplay
+-- works fine without it; only the visual is lost).
+Config.PUNCH_ANIMATION_ID = "rbxassetid://3910055905"
+
 -- Strength gained per punch before any upgrade multipliers, at
 -- level 1 of PunchPower.
 Config.BASE_PUNCH_DAMAGE = 1

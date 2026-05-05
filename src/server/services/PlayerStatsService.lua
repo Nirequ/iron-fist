@@ -18,31 +18,53 @@ local lastSaveAt = {}       -- userId → os.clock() of last save
 
 local AUTOSAVE_INTERVAL = 60   -- seconds
 
--- A public Roblox punch animation. If you want a different feel,
--- swap the asset id; the play / load logic stays the same.
-local PUNCH_ANIMATION_ID = "rbxassetid://92159718"
-
 -- One Animation instance is fine for every player — Animator:LoadAnimation
--- returns a fresh AnimationTrack per call.
-local punchAnimation = Instance.new("Animation")
-punchAnimation.AnimationId = PUNCH_ANIMATION_ID
+-- returns a fresh AnimationTrack per call. The asset id is read from
+-- Config so designers can swap it without touching this file.
+local punchAnimation
+if Config.PUNCH_ANIMATION_ID and Config.PUNCH_ANIMATION_ID ~= "" then
+	punchAnimation = Instance.new("Animation")
+	punchAnimation.AnimationId = Config.PUNCH_ANIMATION_ID
+end
 
-local function playPunchAnimation(player)
+-- Per-player cached AnimationTrack: { character, track }. Re-using a
+-- single track per character spawn means the engine only tries to
+-- resolve the asset once per life — if the id is broken, you get
+-- one warning instead of one warning per click.
+local trackByUserId = {}
+
+local function getPunchTrack(player)
+	if not punchAnimation then return nil end
+
 	local character = player.Character
-	if not character then return end
+	if not character then return nil end
 	local humanoid = character:FindFirstChildWhichIsA("Humanoid")
-	if not humanoid then return end
+	if not humanoid then return nil end
 	local animator = humanoid:FindFirstChildOfClass("Animator")
-	if not animator then return end
+	if not animator then return nil end
+
+	local entry = trackByUserId[player.UserId]
+	if entry and entry.character == character and entry.track then
+		return entry.track
+	end
 
 	local ok, track = pcall(function()
 		return animator:LoadAnimation(punchAnimation)
 	end)
-	if not ok or not track then return end
+	if not ok or not track then return nil end
 
 	track.Priority = Enum.AnimationPriority.Action
-	-- fade-in, weight, speed; speed > 1 makes it feel snappier
-	track:Play(0.1, 1, 1.5)
+	trackByUserId[player.UserId] = { character = character, track = track }
+	return track
+end
+
+local function playPunchAnimation(player)
+	local track = getPunchTrack(player)
+	if not track then return end
+
+	-- Re-trigger from frame zero so rapid clicks always show motion.
+	track:Stop(0)
+	track:Play(0.05, 1, 1.5)
 end
 
 local function pushStatsToClient(player)
@@ -183,6 +205,7 @@ local function onPlayerRemoving(player)
 	statsByUserId[player.UserId] = nil
 	lastPunchAt[player.UserId] = nil
 	lastSaveAt[player.UserId] = nil
+	trackByUserId[player.UserId] = nil
 end
 
 local function autosaveLoop()
