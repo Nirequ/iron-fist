@@ -63,14 +63,26 @@ Config.CURRENCY_NAME = "Strength"
 -- macro spam, not to gate the player's natural click rate.
 Config.BASE_PUNCH_COOLDOWN = 0.05
 
--- Asset id of the punch animation played on the player's character
--- on every successful click. Public catalog item; if you upload your
--- own animation, replace the number here and reload — that's the
--- only place the id is referenced.
+-- Asset id of the animation played on the player's character on
+-- every successful click. The default is the Roblox-owned R15
+-- ToolSlash from the default character animation bundle — it's a
+-- swing motion (not literally a punch) but it's guaranteed to load
+-- because Roblox Inc. owns the asset and publishes it for any place
+-- to use. Random user-uploaded "punch" animations from the catalog
+-- usually fail to load in third-party places because the uploader
+-- left them private (you only get the asset metadata, not a
+-- playable animation).
 --
--- Set to nil/empty to disable the animation entirely (gameplay
--- works fine without it; only the visual is lost).
-Config.PUNCH_ANIMATION_ID = "rbxassetid://76710893141393"
+-- To use a real punch:
+--   1. Upload a punch animation to the Roblox catalog under your
+--      account.
+--   2. Set its sharing to "Public".
+--   3. Replace the number below with your asset id.
+--   4. Reload Studio — that's the only place the id is referenced.
+--
+-- Set to nil/empty to disable the animation entirely (gameplay works
+-- fine without it; only the visual is lost).
+Config.PUNCH_ANIMATION_ID = "rbxassetid://522635514"
 
 -- Strength gained per punch before any upgrade multipliers, at
 -- level 1 of PunchPower.
