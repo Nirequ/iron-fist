@@ -16,7 +16,25 @@ local function makeDefault()
 			PunchPower = 1,
 			PunchSpeed = 1,
 		},
+		Gloves = {
+			Owned = { Wooden = true },
+			Equipped = "Wooden",
+		},
 	}
+end
+
+-- Backfills any keys that didn't exist when an old save was written
+-- so older players don't break on the new schema.
+local function ensureSchema(data)
+	data.Strength = data.Strength or 0
+	data.Upgrades = data.Upgrades or {}
+	data.Upgrades.PunchPower = data.Upgrades.PunchPower or 1
+	data.Upgrades.PunchSpeed = data.Upgrades.PunchSpeed or 1
+	data.Gloves = data.Gloves or {}
+	data.Gloves.Owned = data.Gloves.Owned or {}
+	data.Gloves.Owned.Wooden = true            -- always own starter
+	data.Gloves.Equipped = data.Gloves.Equipped or "Wooden"
+	return data
 end
 
 function DataStore.LoadPlayer(player)
@@ -29,14 +47,7 @@ function DataStore.LoadPlayer(player)
 		return makeDefault()
 	end
 	if not data then return makeDefault() end
-
-	-- Forward-compat: backfill any upgrade keys that didn't exist
-	-- when this save was written.
-	data.Upgrades = data.Upgrades or {}
-	data.Upgrades.PunchPower = data.Upgrades.PunchPower or 1
-	data.Upgrades.PunchSpeed = data.Upgrades.PunchSpeed or 1
-	data.Strength = data.Strength or 0
-	return data
+	return ensureSchema(data)
 end
 
 function DataStore.SavePlayer(player, stats)

@@ -64,7 +64,8 @@ function PlayerStatsService.RegisterPunch(player)
 	if now - last < cooldown then return end
 	lastPunchAt[player.UserId] = now
 
-	local damage = Config.ComputePunchDamage(stats.Upgrades.PunchPower)
+	local gloveMultiplier = Config.GetGloveMultiplier(stats.Gloves and stats.Gloves.Equipped or "Wooden")
+	local damage = Config.ComputePunchDamage(stats.Upgrades.PunchPower, gloveMultiplier)
 	stats.Strength = stats.Strength + damage
 
 	pushStatsToClient(player)
@@ -78,6 +79,58 @@ end
 
 function PlayerStatsService.GetStats(player)
 	return statsByUserId[player.UserId]
+end
+
+function PlayerStatsService.BuyGlove(player, gloveId)
+	local stats = statsByUserId[player.UserId]
+	if not stats then
+		return { success = false, message = "Stats not loaded" }
+	end
+
+	local glove = Config.GetGlove(gloveId)
+	if not glove then
+		return { success = false, message = "Unknown glove" }
+	end
+
+	if stats.Gloves.Owned[gloveId] then
+		return { success = false, message = "Already owned" }
+	end
+
+	if stats.Strength < glove.Cost then
+		return { success = false, message = "Not enough Strength" }
+	end
+
+	stats.Strength = stats.Strength - glove.Cost
+	stats.Gloves.Owned[gloveId] = true
+	-- Equip newly bought glove automatically — feels obvious in a
+	-- clicker, no one buys a glove and then forgets to equip it.
+	stats.Gloves.Equipped = gloveId
+
+	pushStatsToClient(player)
+	return {
+		success = true,
+		gloveId = gloveId,
+		remainingStrength = stats.Strength,
+	}
+end
+
+function PlayerStatsService.EquipGlove(player, gloveId)
+	local stats = statsByUserId[player.UserId]
+	if not stats then
+		return { success = false, message = "Stats not loaded" }
+	end
+
+	if not Config.GetGlove(gloveId) then
+		return { success = false, message = "Unknown glove" }
+	end
+
+	if not stats.Gloves.Owned[gloveId] then
+		return { success = false, message = "Not owned" }
+	end
+
+	stats.Gloves.Equipped = gloveId
+	pushStatsToClient(player)
+	return { success = true, gloveId = gloveId }
 end
 
 function PlayerStatsService.BuyUpgrade(player, upgradeId)
@@ -162,6 +215,14 @@ function PlayerStatsService.Init()
 
 	RemoteObjects.BuyUpgradeFunction.OnServerInvoke = function(player, upgradeId)
 		return PlayerStatsService.BuyUpgrade(player, upgradeId)
+	end
+
+	RemoteObjects.BuyGloveFunction.OnServerInvoke = function(player, gloveId)
+		return PlayerStatsService.BuyGlove(player, gloveId)
+	end
+
+	RemoteObjects.EquipGloveFunction.OnServerInvoke = function(player, gloveId)
+		return PlayerStatsService.EquipGlove(player, gloveId)
 	end
 
 	-- The client fires this whenever the player clicks/taps anywhere
